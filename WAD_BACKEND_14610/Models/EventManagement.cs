@@ -15,25 +15,26 @@ namespace WAD_BACKEND_14610.Models
         [Required(ErrorMessage = "Venue is required")]
         public string Venue { get; set; }
 
-        private string _organizer;
 
-        public string Organizer
+        [Required(ErrorMessage = "Organizer is required")]
+        [OrganizerValidation(ErrorMessage = "Organizer name must start with a capital letter")]
+        public string Organizer { get; set; }
+    }
+}
+
+public class OrganizerValidationAttribute : ValidationAttribute
+{
+    protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+    {
+        if (value != null)
         {
-            get => _organizer;
-            set
+            string organizerName = value.ToString();
+            if (!char.IsUpper(organizerName[0]))
             {
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    throw new ArgumentException("Organizer cannot be null or empty.");
-                }
-
-                if (!char.IsUpper(value[0]))
-                {
-                    throw new ArgumentException("Organizer must start with a capital letter.");
-                }
-
-                _organizer = value;
+                return new ValidationResult(ErrorMessage);
             }
         }
+
+        return ValidationResult.Success;
     }
 }

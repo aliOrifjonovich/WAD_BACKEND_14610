@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WAD_BACKEND_14610.Data;
+using WAD_BACKEND_14610.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<EventManagementDbContext>(
     e => e.UseSqlServer(builder.Configuration.GetConnectionString("EventManagementConnectionString"))
     );
+builder.Services.AddScoped<IEventManagementRepository, EventManagementRepository>();
+builder.Services.AddScoped<IEventAttendeesRepository, EventAttendeesRepository>();
 
 var app = builder.Build();
 

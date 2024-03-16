@@ -15,17 +15,11 @@ namespace WAD_BACKEND_14610.Models
         public string Email { get; set; }
 
         [Required(ErrorMessage = "TicketType is required")]
-        public TicketType TicketType { get; set; }
+        public string TicketType { get; set; }
 
         public int? EventId { get; set; }
 
         [ForeignKey("EventId")]
         public EventManagement? EventManagement { get; set; }
     }
-}
-
-public enum TicketType
-{
-    VIP,
-    Regular
 }

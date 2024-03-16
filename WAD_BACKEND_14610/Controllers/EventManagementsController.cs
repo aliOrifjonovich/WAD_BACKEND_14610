@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WAD_BACKEND_14610.Data;
 using WAD_BACKEND_14610.Models;
+using WAD_BACKEND_14610.Repositories;
 
 namespace WAD_BACKEND_14610.Controllers
 {
@@ -14,40 +15,32 @@ namespace WAD_BACKEND_14610.Controllers
     [ApiController]
     public class EventManagementsController : ControllerBase
     {
-        private readonly EventManagementDbContext _context;
+        private readonly IEventManagementRepository _eventManagementsRepository;
 
-        public EventManagementsController(EventManagementDbContext context)
+        public EventManagementsController(IEventManagementRepository eventManagementsRepository)
         {
-            _context = context;
+            _eventManagementsRepository = eventManagementsRepository;
         }
 
         // GET: api/EventManagements
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EventManagement>>> GetEventManagements()
+        public async Task<IEnumerable<EventManagement>> GetEventManagements()
         {
-          if (_context.EventManagements == null)
-          {
-              return NotFound();
-          }
-            return await _context.EventManagements.ToListAsync();
+            return await _eventManagementsRepository.GetEventManagements();
         }
 
         // GET: api/EventManagements/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<EventManagement>> GetEventManagement(int id)
+        public async Task<ActionResult<EventManagement>> GetEventManagementById(int id)
         {
-          if (_context.EventManagements == null)
-          {
-              return NotFound();
-          }
-            var eventManagement = await _context.EventManagements.FindAsync(id);
+            var eventManagement = await _eventManagementsRepository.GetEventManagementById(id);
 
             if (eventManagement == null)
             {
                 return NotFound();
             }
 
-            return eventManagement;
+            return Ok(eventManagement);
         }
 
         // PUT: api/EventManagements/5
@@ -60,15 +53,14 @@ namespace WAD_BACKEND_14610.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(eventManagement).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _eventManagementsRepository.PutEventManagement(eventManagement);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!EventManagementExists(id))
+                var eventManagementSingle = await _eventManagementsRepository.GetEventManagementById(id);
+                if (eventManagementSingle == null)
                 {
                     return NotFound();
                 }
@@ -86,39 +78,18 @@ namespace WAD_BACKEND_14610.Controllers
         [HttpPost]
         public async Task<ActionResult<EventManagement>> PostEventManagement(EventManagement eventManagement)
         {
-          if (_context.EventManagements == null)
-          {
-              return Problem("Entity set 'EventManagementDbContext.EventManagements'  is null.");
-          }
-            _context.EventManagements.Add(eventManagement);
-            await _context.SaveChangesAsync();
+            await _eventManagementsRepository.PostEventManagement(eventManagement);
 
-            return CreatedAtAction("GetEventManagement", new { id = eventManagement.Id }, eventManagement);
+            return CreatedAtAction("GetEventManagements", new { id = eventManagement.Id }, eventManagement);
         }
 
         // DELETE: api/EventManagements/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEventManagement(int id)
         {
-            if (_context.EventManagements == null)
-            {
-                return NotFound();
-            }
-            var eventManagement = await _context.EventManagements.FindAsync(id);
-            if (eventManagement == null)
-            {
-                return NotFound();
-            }
-
-            _context.EventManagements.Remove(eventManagement);
-            await _context.SaveChangesAsync();
+            await _eventManagementsRepository.DeleteEventManagement(id);
 
             return NoContent();
-        }
-
-        private bool EventManagementExists(int id)
-        {
-            return (_context.EventManagements?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

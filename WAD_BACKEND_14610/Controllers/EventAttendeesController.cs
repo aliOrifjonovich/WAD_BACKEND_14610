@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WAD_BACKEND_14610.Data;
 using WAD_BACKEND_14610.Models;
+using WAD_BACKEND_14610.Repositories;
 
 namespace WAD_BACKEND_14610.Controllers
 {
@@ -14,40 +15,32 @@ namespace WAD_BACKEND_14610.Controllers
     [ApiController]
     public class EventAttendeesController : ControllerBase
     {
-        private readonly EventManagementDbContext _context;
+        private readonly IEventAttendeesRepository _eventAttendeessRepository;
 
-        public EventAttendeesController(EventManagementDbContext context)
+        public EventAttendeesController(IEventAttendeesRepository eventAttendeessRepository)
         {
-            _context = context;
+            _eventAttendeessRepository = eventAttendeessRepository;
         }
 
         // GET: api/EventAttendees
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EventAttendees>>> GetEventAttendeess()
+        public async Task<IEnumerable<EventAttendees>> GetEventAttendeess()
         {
-          if (_context.EventAttendeess == null)
-          {
-              return NotFound();
-          }
-            return await _context.EventAttendeess.ToListAsync();
+            return await _eventAttendeessRepository.GetEventAttendeess();
         }
 
         // GET: api/EventAttendees/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<EventAttendees>> GetEventAttendees(int id)
+        public async Task<ActionResult<EventAttendees>> GetEventAttendeesById(int id)
         {
-          if (_context.EventAttendeess == null)
-          {
-              return NotFound();
-          }
-            var eventAttendees = await _context.EventAttendeess.FindAsync(id);
+            var eventAttendees = await _eventAttendeessRepository.GetEventAttendeesById(id);
 
             if (eventAttendees == null)
             {
                 return NotFound();
             }
 
-            return eventAttendees;
+            return Ok(eventAttendees);
         }
 
         // PUT: api/EventAttendees/5
@@ -60,15 +53,14 @@ namespace WAD_BACKEND_14610.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(eventAttendees).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _eventAttendeessRepository.PutEventAttendees(eventAttendees);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!EventAttendeesExists(id))
+                var eventAttendeesSingle = await _eventAttendeessRepository.GetEventAttendeesById(id);
+                if (eventAttendeesSingle == null)
                 {
                     return NotFound();
                 }
@@ -86,39 +78,18 @@ namespace WAD_BACKEND_14610.Controllers
         [HttpPost]
         public async Task<ActionResult<EventAttendees>> PostEventAttendees(EventAttendees eventAttendees)
         {
-          if (_context.EventAttendeess == null)
-          {
-              return Problem("Entity set 'EventManagementDbContext.EventAttendeess'  is null.");
-          }
-            _context.EventAttendeess.Add(eventAttendees);
-            await _context.SaveChangesAsync();
+            await _eventAttendeessRepository.PostEventAttendees(eventAttendees);
 
-            return CreatedAtAction("GetEventAttendees", new { id = eventAttendees.Id }, eventAttendees);
+            return CreatedAtAction("GetEventAttendeess", new { id = eventAttendees.Id }, eventAttendees);
         }
 
         // DELETE: api/EventAttendees/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEventAttendees(int id)
         {
-            if (_context.EventAttendeess == null)
-            {
-                return NotFound();
-            }
-            var eventAttendees = await _context.EventAttendeess.FindAsync(id);
-            if (eventAttendees == null)
-            {
-                return NotFound();
-            }
-
-            _context.EventAttendeess.Remove(eventAttendees);
-            await _context.SaveChangesAsync();
+            await _eventAttendeessRepository.DeleteEventAttendees(id);
 
             return NoContent();
-        }
-
-        private bool EventAttendeesExists(int id)
-        {
-            return (_context.EventAttendeess?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
