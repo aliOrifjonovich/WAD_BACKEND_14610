@@ -13,6 +13,14 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<EventManagementDbContext>(
     e => e.UseSqlServer(builder.Configuration.GetConnectionString("EventManagementConnectionString"))
     );
+var allowedOrigins = "";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: allowedOrigins, policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    });
+});
 builder.Services.AddScoped<IEventManagementRepository, EventManagementRepository>();
 builder.Services.AddScoped<IEventAttendeesRepository, EventAttendeesRepository>();
 
@@ -30,5 +38,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseCors(allowedOrigins);
 
 app.Run();
